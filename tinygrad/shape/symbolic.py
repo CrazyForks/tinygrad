@@ -22,11 +22,9 @@ class Node:
 
   @functools.cached_property
   def key(self) -> str: return self.render(ctx="DEBUG")
-  @functools.cached_property
-  def hash(self) -> int: return hash(self.key)
   def __repr__(self): return self.render(ctx="REPR")
   def __str__(self): return "<"+self.key+">"
-  def __hash__(self): return self.hash
+  def __hash__(self): return hash(self.key)
   def __bool__(self): return not (self.max == self.min == 0)
   def __eq__(self, other:object) -> bool:
     if not isinstance(other, Node): return NotImplemented
@@ -300,9 +298,9 @@ class AndNode(RedNode):
     return Node.ands(subed)
 
 def sym_render(a: Union[Node, int], ops=None, ctx=None) -> str: return str(a) if isinstance(a, int) else a.render(ops, ctx)
-def sym_infer(a: Union[Node, int], var_vals: Dict[Variable, int]) -> int:
+def sym_infer(a: Union[Node, int], var_vals: Optional[Dict[Variable, int]]) -> int:
   if isinstance(a, (int, float)): return a
-  ret = a.substitute({k:NumNode(v) for k, v in var_vals.items()})
+  ret = a.substitute({k:NumNode(v) for k, v in var_vals.items()}) if var_vals is not None else a
   assert isinstance(ret, NumNode), f"sym_infer didn't produce NumNode from {a} with {var_vals}"
   return ret.b
 
